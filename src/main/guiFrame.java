@@ -1,8 +1,6 @@
 package main;
 
 import helper.*;
-import java.io.*;
-import java.util.*;
 import javax.swing.*;
 import java.awt.*;
 
@@ -12,7 +10,6 @@ public class guiFrame extends JFrame{
 	public static int FRAME_WIDTH,FRAME_HEIGHT;
 	public static JTextArea toEncodeText,encodedText;
 	public static JComboBox encoding,alignment,labelLocation;
-	public static String[] encodingTypes = {" Nikhil "," Swapnil "," Subham "," Kuldeep "," Abhishek "};
 	public static String[] alignmentTypes = {" Left "," Right "," Top "," Bottom "," Center "};
 	public static String[] labelLocationsTypes = {" Left "," Right "," Top "," Bottom "," Center "};
 	public static ColorChooserButton fcolor,bcolor;
@@ -20,6 +17,11 @@ public class guiFrame extends JFrame{
 	public static JScrollPane toEncodeSPane,encodedSPane;
 	public static JCheckBox label;
 	public static JTextField labelText;
+	public static String enctext;
+	public static Color foreColor,backColor;
+	public static BarcodeTypes bctypes = new BarcodeTypes();
+	public static EncodeBarcode encbarcode = new EncodeBarcode();
+	
 	
 	Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
 	
@@ -27,7 +29,9 @@ public class guiFrame extends JFrame{
 		initDimensions();
 		populateConfigPanel();
 		populateBarcodePanel();
-		
+	    setListeners();
+	    setDefaultValues();
+	    
 		setSize(new Dimension(FRAME_WIDTH,FRAME_HEIGHT));
 		setLayout(new GridBagLayout());
 		
@@ -36,21 +40,38 @@ public class guiFrame extends JFrame{
 
 	}
 	
+	public void initDimensions() {
+		FRAME_WIDTH = d.width/3;
+		FRAME_HEIGHT = 2*d.height/3;
+	}
+	
+	public static void setDefaultValues() {
+		foreColor = Color.BLACK;
+		backColor = Color.WHITE;
+	}
+	
+	public static void populateBarcodePanel(){
+		barcodePanel = new JPanel();
+		barcodePanel.setBorder(BorderFactory.createTitledBorder("  Barcode Image  "));
+	    barcodePanel.setLayout(new BorderLayout());
+	}
+	
 	public static void populateConfigPanel(){
 		configPanel = new JPanel();
-		configPanel.setBorder(BorderFactory.createTitledBorder("  Barcode Image  "));
+		configPanel.setBorder(BorderFactory.createTitledBorder("  Barcode Configuration  "));
 		configPanel.setLayout(new GridBagLayout());
 	    
 		configPanel.add(new JLabel("Value to Encode"),new GBC(0,0,2,1).setInsets(0,0,3,120));
 		configPanel.add(new JLabel("Encoded Value"),new GBC(2,0,2,1).setInsets(0,0,3,120));
 		configPanel.add(toEncodeSPane=new JScrollPane(toEncodeText = new JTextArea(3,20),JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,JScrollPane.HORIZONTAL_SCROLLBAR_NEVER),new GBC(0,1,2,1).setInsets(0,0,3,5));
 		configPanel.add(encodedSPane=new JScrollPane(encodedText = new JTextArea(3,20),JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,JScrollPane.HORIZONTAL_SCROLLBAR_NEVER),new GBC(2,1,2,1));
-	    
+	    encodedText.setEditable(false);
+		
     	toEncodeSPane.setPreferredSize(new Dimension((int)(FRAME_WIDTH*0.45),(int)(FRAME_HEIGHT*0.2)));
     	encodedSPane.setPreferredSize(new Dimension((int)(FRAME_WIDTH*0.45),(int)(FRAME_HEIGHT*0.2)));
     		
 		configPanel.add(new JLabel("Encoding"),new GBC(0,2).setInsets(5,0,2,50));
-	    configPanel.add(encoding = new JComboBox(encodingTypes),new GBC(0,3));
+	    configPanel.add(encoding = new JComboBox(bctypes.encodingTypes),new GBC(0,3));
 	    encoding.setPreferredSize(new Dimension(100,25));
 	    configPanel.add(new JLabel("ForeGround"),new GBC(1,2).setInsets(5,0,2,10));
 	    configPanel.add(fcolor = new ColorChooserButton(Color.BLACK),new GBC(1,3));
@@ -71,8 +92,10 @@ public class guiFrame extends JFrame{
 	    
 	    configPanel.add(new JLabel("Alternate Label Text"),new GBC(2,2,2,1).setInsets(5,0,2,90));
 	    configPanel.add(labelText = new JTextField(18),new GBC(2,3,2,1));
+	    labelText.setEnabled(false);
 	    configPanel.add(new JLabel("Label location"),new GBC(2,4,2,1).setInsets(10,0,2,120));
 	    configPanel.add(labelLocation = new JComboBox(labelLocationsTypes),new GBC(2,5,2,1));
+	    labelLocation.setEnabled(false);
 	    labelLocation.setPreferredSize(new Dimension(200,25));
 	    
 	    configPanel.add(savexml = new JButton("SaveXML"),new GBC(2,6).setInsets(15,0,0,0));
@@ -81,14 +104,48 @@ public class guiFrame extends JFrame{
 		
 	}
 	
-	public static void populateBarcodePanel(){
-		barcodePanel = new JPanel();
-		barcodePanel.setBorder(BorderFactory.createTitledBorder("  Barcode Configuration  "));
+	public  void setListeners() {
+	    
+		label.addActionListener(e->{
+	        if(label.isSelected()) {
+	        	labelText.setEnabled(true);
+		        labelLocation.setEnabled(true);	
+	        }else {
+	        	labelText.setEnabled(false);
+		        labelLocation.setEnabled(false);		
+	        }
+	    });
+		
+		encode.addActionListener(e->{
+			if(toEncodeText.getText().equals("")) {
+			   JOptionPane.showMessageDialog(this, "Please enter value to encode !!!");	
+			}else {
+	           encodeImage();  		
+			}
+		});
+		
+		saveAs.addActionListener(e->{
+			
+		});
+		
+		fcolor.addActionListener(e->{
+			foreColor = fcolor.getSelectedColor();
+		});
+		
+		bcolor.addActionListener(e->{
+			backColor = bcolor.getSelectedColor();
+		});
 	}
 	
-	public void initDimensions() {
-		FRAME_WIDTH = d.width/3;
-		FRAME_HEIGHT = 2*d.height/3;
+	public static void encodeImage() {
+	     String encodType = encoding.getSelectedItem().toString();
+	     String alignmentType = alignment.getSelectedItem().toString();
+	     
+	     int typeno = bctypes.getValue(encoding.getSelectedItem().toString());
+//	     System.out.println(typeno);
+         ImageIcon image =  encbarcode.getImageIcon(encodType,toEncodeText.getText());
+         JLabel labelImage = new JLabel("",image,JLabel.CENTER);
+         barcodePanel.add(labelImage,BorderLayout.CENTER);
 	}
 	
 	public static void main(String args[]) {
@@ -98,6 +155,7 @@ public class guiFrame extends JFrame{
 				jframe.setVisible(true);
 				jframe.setTitle("Barcode Generator");
 				jframe.setLocationRelativeTo(null);
+			    jframe.setIconImage(new ImageIcon("C:\\Users\\Nikhil Shinde\\workspace-java\\BarcodeGenerator\\res\\appIcon.jpg").getImage());
 			}
 		});
 	}
