@@ -14,7 +14,7 @@ import javax.swing.JColorChooser;
 
 public class ColorChooserButton extends JButton {
 
-    private Color current;
+    public  Color current;
 
     public ColorChooserButton(Color c) {
         setSelectedColor(c); 
@@ -27,11 +27,14 @@ public class ColorChooserButton extends JButton {
         });
     }
 
-    public Color getSelectedColor() {
-        return current;
+    public  Color getSelectedColor() {
+//    	System.out.println("Selcted color returning: "+current.toString());
+    	return current;
     }
 
     public void setSelectedColor(Color newColor) {
+    	current = newColor;
+//    	System.out.println("Selcted color : "+current.toString());
         setSelectedColor(newColor, true);
     }
 

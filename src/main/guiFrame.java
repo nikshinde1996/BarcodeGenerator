@@ -1,8 +1,13 @@
 package main;
 
 import helper.*;
+
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 
 public class guiFrame extends JFrame{
 	
@@ -21,7 +26,10 @@ public class guiFrame extends JFrame{
 	public static Color foreColor,backColor;
 	public static BarcodeTypes bctypes = new BarcodeTypes();
 	public static EncodeBarcode encbarcode = new EncodeBarcode();
-	
+	public static JFileChooser fileChooser = new JFileChooser();
+	public static boolean ENCODEFLAG;
+	public static ImageIcon image;
+	public static BufferedImage bi;
 	
 	Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
 	
@@ -38,6 +46,22 @@ public class guiFrame extends JFrame{
 		add(barcodePanel,new GBC(0,0).setWeight(1,0.8).setFill(GBC.BOTH));
 		add(configPanel,new GBC(0,1).setWeight(1,0.2).setFill(GBC.BOTH));
 
+		try {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InstantiationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedLookAndFeelException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 	}
 	
 	public void initDimensions() {
@@ -48,6 +72,15 @@ public class guiFrame extends JFrame{
 	public static void setDefaultValues() {
 		foreColor = Color.BLACK;
 		backColor = Color.WHITE;
+	    fcolor = new ColorChooserButton(foreColor);
+		bcolor = new ColorChooserButton(backColor);
+		ENCODEFLAG = false;
+		toEncodeText.setText("");
+		encodedText.setText("");
+		barcodePanel.removeAll();
+		barcodePanel.revalidate();
+		fcolor.setSelectedColor(foreColor);
+		bcolor.setSelectedColor(backColor);
 	}
 	
 	public static void populateBarcodePanel(){
@@ -59,10 +92,10 @@ public class guiFrame extends JFrame{
 	public static void populateConfigPanel(){
 		configPanel = new JPanel();
 		configPanel.setBorder(BorderFactory.createTitledBorder("  Barcode Configuration  "));
-		configPanel.setLayout(new GridBagLayout());
+	    configPanel.setLayout(new GridBagLayout());
 	    
-		configPanel.add(new JLabel("Value to Encode"),new GBC(0,0,2,1).setInsets(0,0,3,120));
-		configPanel.add(new JLabel("Encoded Value"),new GBC(2,0,2,1).setInsets(0,0,3,120));
+	    configPanel.add(new JLabel("Value to Encode"),new GBC(0,0,2,1).setInsets(0,0,3,120));
+	    configPanel.add(new JLabel("Encoded Value"),new GBC(2,0,2,1).setInsets(0,0,3,120));
 		configPanel.add(toEncodeSPane=new JScrollPane(toEncodeText = new JTextArea(3,20),JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,JScrollPane.HORIZONTAL_SCROLLBAR_NEVER),new GBC(0,1,2,1).setInsets(0,0,3,5));
 		configPanel.add(encodedSPane=new JScrollPane(encodedText = new JTextArea(3,20),JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,JScrollPane.HORIZONTAL_SCROLLBAR_NEVER),new GBC(2,1,2,1));
 	    encodedText.setEditable(false);
@@ -120,32 +153,61 @@ public class guiFrame extends JFrame{
 			if(toEncodeText.getText().equals("")) {
 			   JOptionPane.showMessageDialog(this, "Please enter value to encode !!!");	
 			}else {
-	           encodeImage();  		
+	           encodeImage();
+	           ENCODEFLAG = true;
 			}
 		});
 		
 		saveAs.addActionListener(e->{
 			
+			if(!ENCODEFLAG || image==null) {
+				JOptionPane.showMessageDialog(this, "Please Encode image before saving !!!");
+			}else {
+			   saveImage();		
+			}
 		});
 		
 		fcolor.addActionListener(e->{
 			foreColor = fcolor.getSelectedColor();
+			System.out.println("FCOlor : "+foreColor.toString());
 		});
 		
 		bcolor.addActionListener(e->{
 			backColor = bcolor.getSelectedColor();
+			System.out.println("BCOlor : "+backColor.toString());
 		});
+	}
+	
+	public void saveImage() {
+		fileChooser.setDialogTitle("Select folder to save Image");
+        fileChooser.setCurrentDirectory(new File("."));
+		int userSelection = fileChooser.showSaveDialog(this);	
+		if(userSelection == JFileChooser.APPROVE_OPTION) {
+			File fileToSave = fileChooser.getSelectedFile();
+		
+			System.out.println(fileToSave.getAbsolutePath());
+			try {
+				ImageIO.write(bi,"png",fileToSave);
+				JOptionPane.showMessageDialog(this,"Barcode Image saved Successfully !!!");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		setDefaultValues();
 	}
 	
 	public static void encodeImage() {
 	     String encodType = encoding.getSelectedItem().toString();
 	     String alignmentType = alignment.getSelectedItem().toString();
 	     
+	     barcodePanel.removeAll();
 	     int typeno = bctypes.getValue(encoding.getSelectedItem().toString());
-//	     System.out.println(typeno);
-         ImageIcon image =  encbarcode.getImageIcon(encodType,toEncodeText.getText());
-         JLabel labelImage = new JLabel("",image,JLabel.CENTER);
+	     image =  encbarcode.getImageIcon(encodType,toEncodeText.getText(),backColor,foreColor);
+         bi = (BufferedImage) image.getImage();
+	     JLabel labelImage = new JLabel("",image,JLabel.CENTER);
          barcodePanel.add(labelImage,BorderLayout.CENTER);
+         barcodePanel.revalidate();
+	     ENCODEFLAG = true;
 	}
 	
 	public static void main(String args[]) {
