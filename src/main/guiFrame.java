@@ -9,12 +9,13 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
+@SuppressWarnings("serial")
 public class guiFrame extends JFrame{
 	
 	public static JPanel barcodePanel,configPanel;
 	public static int FRAME_WIDTH,FRAME_HEIGHT;
 	public static JTextArea toEncodeText,encodedText;
-	public static JComboBox encoding,alignment,labelLocation;
+	public static JComboBox<String> encoding,alignment,labelLocation;
 	public static String[] alignmentTypes = {" Left "," Right "," Top "," Bottom "," Center "};
 	public static String[] labelLocationsTypes = {" Left "," Right "," Top "," Bottom "," Center "};
 	public static ColorChooserButton fcolor,bcolor;
@@ -89,6 +90,7 @@ public class guiFrame extends JFrame{
 	    barcodePanel.setLayout(new BorderLayout());
 	}
 	
+	@SuppressWarnings({ "static-access", "unchecked" })
 	public static void populateConfigPanel(){
 		configPanel = new JPanel();
 		configPanel.setBorder(BorderFactory.createTitledBorder("  Barcode Configuration  "));
@@ -159,7 +161,6 @@ public class guiFrame extends JFrame{
 		});
 		
 		saveAs.addActionListener(e->{
-			
 			if(!ENCODEFLAG || image==null) {
 				JOptionPane.showMessageDialog(this, "Please Encode image before saving !!!");
 			}else {

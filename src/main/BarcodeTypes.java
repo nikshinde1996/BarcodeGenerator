@@ -21,6 +21,6 @@ public class BarcodeTypes {
     }
     
     public static int getValue(String str) {
-    	return enctypes.get(str).intValue();
+    	return  enctypes.get(str).intValue();
     }
 }

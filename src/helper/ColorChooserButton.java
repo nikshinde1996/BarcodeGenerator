@@ -12,6 +12,9 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JColorChooser;
 
+import org.checkerframework.checker.linear.qual.Unusable;
+
+@SuppressWarnings("serial")
 public class ColorChooserButton extends JButton {
 
     public  Color current;
@@ -48,12 +51,12 @@ public class ColorChooserButton extends JButton {
 
         if (notify) {
             // Notify everybody that may be interested.
-            for (ColorChangedListener l : listeners) {
+            for (@Unusable ColorChangedListener l : listeners) {
                 l.colorChanged(newColor);
             }
         }
     }
-
+    
     public static interface ColorChangedListener {
         public void colorChanged(Color newColor);
     }
